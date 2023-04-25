@@ -1,0 +1,21 @@
+package elog
+
+import "io"
+
+// Logger 日志
+type Logger interface {
+	Output() io.Writer
+	Debug(args ...any)
+	Info(args ...any)
+	Warn(args ...any)
+	Error(args ...any)
+	Panic(args ...any)
+	Fatal(args ...any)
+
+	Debugf(template string, args ...any)
+	Infof(template string, args ...any)
+	Warnf(template string, args ...any)
+	Errorf(template string, args ...any)
+	Panicf(template string, args ...any)
+	Fatalf(template string, args ...any)
+}
