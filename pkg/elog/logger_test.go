@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"echoext/pkg/elog"
+	"github.com/wjhdec/echo-ext/pkg/elog"
 )
 
 func TestLog(t *testing.T) {

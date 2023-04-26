@@ -4,10 +4,17 @@ title = "config demo"
 basePath = "my-test"
 port = "8888"
 
+
+[db]
+[db.local]
+driver = "pgx"
+dsn = "host=localhost user=postgres password=postgres dbname=postgres port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+
 [logger]
 level = "debug"
-filename = "./logs/server.log"
+filename = ""
 maxSize = 10
 maxBackups = 5
 maxAge = 600
 compress = true
+

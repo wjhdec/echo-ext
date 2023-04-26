@@ -18,4 +18,11 @@ type Logger interface {
 	Errorf(template string, args ...any)
 	Panicf(template string, args ...any)
 	Fatalf(template string, args ...any)
+
+	Debugw(msg string, kv ...any)
+	Infow(msg string, kv ...any)
+	Warnw(msg string, kv ...any)
+	Errorw(msg string, kv ...any)
+	Panicw(msg string, kv ...any)
+	Fatalw(msg string, kv ...any)
 }

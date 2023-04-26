@@ -1,9 +1,9 @@
 package server
 
 import (
-	"echoext/pkg/customfmt/custime"
-	"echoext/pkg/elog"
 	"fmt"
+	"github.com/wjhdec/echo-ext/pkg/customfmt/custime"
+	"github.com/wjhdec/echo-ext/pkg/elog"
 	"net/http"
 	"time"
 
@@ -31,14 +31,13 @@ func NewErrResponse(err *echo.HTTPError, c echo.Context) *ErrResponse {
 
 // CustomHttpErrorHandler 自定义错误处理
 func CustomHttpErrorHandler(err error, c echo.Context) {
-	log := elog.Default()
-	log.Errorf("%+v", err)
+	elog.Errorf("%+v", err)
 	if !c.Response().Committed {
 		if err := c.JSON(getErrorResponse(err, c)); err != nil {
-			log.Errorf("%+v", err)
+			elog.Errorf("%+v", err)
 		}
 	} else {
-		log.Warn("already committed")
+		elog.Warn("already committed")
 	}
 }
 

@@ -2,11 +2,10 @@ package server
 
 import (
 	"context"
-	"echoext/pkg/config"
-	"echoext/pkg/elog"
 	"fmt"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
+	"github.com/wjhdec/echo-ext/pkg/config"
+	"github.com/wjhdec/echo-ext/pkg/elog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -74,16 +73,16 @@ func (s *Server) Run() {
 	}
 
 	go func() {
-		log.Infof("start server %s on port: %d", s.version, opt.Port)
+		elog.Infof("start server %s on port: %d", s.version, opt.Port)
 		if opt.TLSKey == "" || opt.TLSPem == "" {
-			log.Debug("not use tls")
+			elog.Debug("not use tls")
 			if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-				log.Fatalf("Start service error: %+v", err)
+				elog.Fatalf("Start service error: %+v", err)
 			}
 		} else {
-			log.Debug("use tls")
+			elog.Debug("use tls")
 			if err := srv.ListenAndServeTLS(opt.TLSPem, opt.TLSKey); err != http.ErrServerClosed {
-				log.Fatalf("Start service error: %+v", err)
+				elog.Fatalf("Start service error: %+v", err)
 			}
 		}
 	}()
@@ -91,11 +90,11 @@ func (s *Server) Run() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
-	log.Info("shutdown server ...")
+	elog.Info("shutdown server ...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := s.e.Shutdown(ctx); err != nil {
-		log.Errorf("server shutdown error: %+v", err)
+		elog.Errorf("server shutdown error: %+v", err)
 	}
 }

@@ -1,10 +1,10 @@
 package main
 
 import (
-	"echoext/pkg/server"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/wjhdec/echo-ext/pkg/server"
 	"net/http"
 )
 
@@ -18,7 +18,7 @@ type Req struct {
 }
 
 func NewTest1Handler() server.HandlerEnable {
-	return server.NewJsonHandler("", http.MethodGet, func(req Req) (any, error) {
+	return server.NewJsonHandler("", http.MethodGet, func(req *Req) (*ResultInfo, error) {
 		return &ResultInfo{Value: req.Name + "_" + fmt.Sprintf("%f", req.Value)}, nil
 	})
 }

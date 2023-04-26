@@ -1,6 +1,6 @@
 package server
 
-import "echoext/pkg/config"
+import "github.com/wjhdec/echo-ext/pkg/config"
 
 func NewOptions(cfg *config.Config) *Options {
 	opt := new(Options)
