@@ -2,9 +2,9 @@ package server
 
 import "github.com/wjhdec/echo-ext/pkg/config"
 
-func NewOptions(cfg *config.Config) *Options {
+func NewOptions(cfg config.Config) *Options {
 	opt := new(Options)
-	err := cfg.Unmarshal("server", opt)
+	err := cfg.UnmarshalByKey("server", opt)
 	if err != nil {
 		panic(err)
 	}

@@ -20,7 +20,7 @@ type Server struct {
 	routers   []*Router
 }
 
-func NewServer(version string, options ...*Options) *Server {
+func NewServer(version string, options ...*Options) (*Server, error) {
 	e := echo.New()
 	e.Logger = newEchoLogger(elog.Default())
 	e.HideBanner = true
@@ -29,11 +29,15 @@ func NewServer(version string, options ...*Options) *Server {
 	if len(options) > 0 {
 		opt = options[0]
 	} else {
-		opt = NewOptions(config.New())
+		cfg, err := config.New()
+		if err != nil {
+			return nil, err
+		}
+		opt = NewOptions(cfg)
 	}
 
 	rootGroup := e.Group(opt.BasePath)
-	return &Server{e: e, rootGroup: rootGroup, version: version, options: opt}
+	return &Server{e: e, rootGroup: rootGroup, version: version, options: opt}, nil
 }
 
 func (s *Server) AddMiddleware(middleware ...echo.MiddlewareFunc) {

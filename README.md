@@ -1,3 +1,22 @@
+# 基于 echo 的扩展
+
+## 说明
+
+对echo进行了功能的整合扩展，方便简单服务的开发
+
+使用框架：
+
+* echo
+* zap
+* sqlx
+* viper
+* sqldb-logger
+
+
+## 使用示例
+
+```go
+
 package main
 
 import (
@@ -39,3 +58,5 @@ func main() {
 	svr.AddRouter(NewDemoRouter(svr.RootGroup()))
 	svr.Run()
 }
+
+```
