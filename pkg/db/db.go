@@ -55,7 +55,7 @@ func newDB(cfg *Config) (*sqlx.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	db = sqldblogger.OpenDriver(cfg.Dsn, db.Driver(), NewAdaptor(elog.Default()))
+	db = sqldblogger.OpenDriver(cfg.Dsn, db.Driver(), NewAdaptor(elog.GlobalLogger()))
 	connect := sqlx.NewDb(db, cfg.Driver)
 	connect.SetMaxIdleConns(cfg.MaxIdle)
 	connect.SetConnMaxIdleTime(time.Duration(cfg.MaxIdle) * time.Second)

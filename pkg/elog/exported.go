@@ -4,7 +4,13 @@ var (
 	std = Default()
 )
 
-func DefaultLogger() Logger {
+// OverrideGlobalLogger 覆盖当前全局logger
+func OverrideGlobalLogger(logger Logger) {
+	std = logger
+}
+
+// GlobalLogger 全局logger
+func GlobalLogger() Logger {
 	return std
 }
 
@@ -66,4 +72,23 @@ func Panicf(format string, args ...interface{}) {
 // Fatalf logs a message at level Fatal on the standard logger then the process will exit with status set to 1.
 func Fatalf(format string, args ...interface{}) {
 	std.Fatalf(format, args...)
+}
+
+func Debugw(msg string, kv ...any) {
+	std.Debugw(msg, kv...)
+}
+func Infow(msg string, kv ...any) {
+	std.Infow(msg, kv...)
+}
+func Warnw(msg string, kv ...any) {
+	std.Warnw(msg, kv...)
+}
+func Errorw(msg string, kv ...any) {
+	std.Errorw(msg, kv...)
+}
+func Panicw(msg string, kv ...any) {
+	std.Panicw(msg, kv...)
+}
+func Fatalw(msg string, kv ...any) {
+	std.Fatalw(msg, kv...)
 }
