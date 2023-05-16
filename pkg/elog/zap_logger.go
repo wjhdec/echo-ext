@@ -46,10 +46,14 @@ func NewLogger(cfg config.Config) Logger {
 	var encoder zapcore.Encoder
 	if jack != nil && jack.Filename != "" {
 		writer = zapcore.AddSync(jack)
-		encoder = zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
+		peCfg := zap.NewProductionEncoderConfig()
+		peCfg.EncodeTime = zapcore.ISO8601TimeEncoder
+		encoder = zapcore.NewJSONEncoder(peCfg)
 	} else {
 		writer = zapcore.AddSync(os.Stdout)
-		encoder = zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
+		devCfg := zap.NewDevelopmentEncoderConfig()
+		devCfg.EncodeTime = zapcore.ISO8601TimeEncoder
+		encoder = zapcore.NewConsoleEncoder(devCfg)
 	}
 	level := zapcore.DebugLevel
 	var err error
