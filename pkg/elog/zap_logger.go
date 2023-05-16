@@ -1,20 +1,14 @@
 package elog
 
 import (
-	"io"
-	"os"
-	"sync"
-
+	"fmt"
 	"github.com/wjhdec/echo-ext/pkg/config"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"io"
+	"os"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-)
-
-var (
-	blog     Logger
-	zlogOnce sync.Once
 )
 
 type LoggerConfig struct {
@@ -37,10 +31,10 @@ func NewLogger(cfg config.Config) Logger {
 	jack := new(lumberjack.Logger)
 	if cfg != nil {
 		if err := cfg.UnmarshalByKey("logger", jack); err != nil {
-			zap.S().Error(err)
+			fmt.Printf("read logger config error : %+v \n", err)
 		}
 	} else {
-		zap.S().Warn("config not found, use default logger")
+		fmt.Println("config not found, use default logger instead")
 	}
 	var writer zapcore.WriteSyncer
 	var encoder zapcore.Encoder
@@ -50,6 +44,7 @@ func NewLogger(cfg config.Config) Logger {
 		peCfg.EncodeTime = zapcore.ISO8601TimeEncoder
 		encoder = zapcore.NewJSONEncoder(peCfg)
 	} else {
+		fmt.Println("can not find log file config, use stdout instead")
 		writer = zapcore.AddSync(os.Stdout)
 		devCfg := zap.NewDevelopmentEncoderConfig()
 		devCfg.EncodeTime = zapcore.ISO8601TimeEncoder
@@ -60,7 +55,7 @@ func NewLogger(cfg config.Config) Logger {
 	if cfg != nil {
 		level, err = zapcore.ParseLevel(cfg.StrValueByKey("logger.level"))
 		if err != nil {
-			zap.S().Errorf("log read config error, use warn default: %+v", err.Error())
+			fmt.Printf("log read config error, use warn default: %+v \n", err.Error())
 		}
 	}
 	zCore := zapcore.NewCore(encoder, writer, level)
