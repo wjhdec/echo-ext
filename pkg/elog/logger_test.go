@@ -8,7 +8,7 @@ import (
 )
 
 func TestLog(t *testing.T) {
-	log := elog.Default()
+	log := elog.NewConsoleLogger()
 	log.Debug("info")
 }
 
@@ -21,7 +21,7 @@ func testError2() error {
 }
 
 func TestErrLog(t *testing.T) {
-	log := elog.Default()
+	log := elog.NewConsoleLogger()
 	err := testError1()
 	log.Error(err)
 }

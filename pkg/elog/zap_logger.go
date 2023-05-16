@@ -60,22 +60,19 @@ func NewLogger(cfg config.Config) Logger {
 	}
 	zCore := zapcore.NewCore(encoder, writer, level)
 	l := zap.New(zCore, zap.AddStacktrace(zapcore.WarnLevel))
-	zap.ReplaceGlobals(l)
 	return &baseLogger{
 		SugaredLogger: *l.Sugar(),
 		writer:        writer,
 	}
 }
 
-// Default 默认日志，如果读取内容出错，则使用默认的zap设置
-func Default() Logger {
-	zlogOnce.Do(func() {
-		cfg, err := config.New()
-		if err != nil {
-			zap.S().Error(err)
-		}
-		blog = NewLogger(cfg)
-	})
-	return blog
-
+func NewConsoleLogger() Logger {
+	build, err := zap.NewDevelopmentConfig().Build()
+	if err != nil {
+		fmt.Printf("build log error: %+v \n", err)
+	}
+	return &baseLogger{
+		SugaredLogger: *build.Sugar(),
+		writer:        os.Stdout,
+	}
 }

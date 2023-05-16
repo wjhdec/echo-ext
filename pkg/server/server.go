@@ -24,7 +24,7 @@ type Server struct {
 
 func NewServer(version string, cfg ...config.Config) (*Server, error) {
 	e := echo.New()
-	e.Logger = newEchoLogger(elog.Default())
+	e.Logger = newEchoLogger(elog.GlobalLogger())
 	e.HideBanner = true
 	e.HTTPErrorHandler = CustomHttpErrorHandler
 	var ecfg config.Config

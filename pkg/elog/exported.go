@@ -1,7 +1,7 @@
 package elog
 
 var (
-	std = Default()
+	std = NewConsoleLogger()
 )
 
 // OverrideGlobalLogger 覆盖当前全局logger
