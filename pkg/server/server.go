@@ -22,7 +22,7 @@ type Server struct {
 	routers   []Router
 }
 
-func NewServer(version string, cfg ...config.Config) (*Server, error) {
+func NewServerWithName(name string, version string, cfg ...config.Config) (*Server, error) {
 	e := echo.New()
 	e.Logger = newEchoLogger(elog.GlobalLogger())
 	e.HideBanner = true
@@ -37,9 +37,17 @@ func NewServer(version string, cfg ...config.Config) (*Server, error) {
 		}
 		ecfg = innerCfg
 	}
-	opt := NewOptions(ecfg)
+	svrName := "server"
+	if name != "" {
+		svrName = "server." + name
+	}
+	opt := NewOptions(ecfg, svrName)
 	rootGroup := e.Group(opt.BasePath)
 	return &Server{e: e, rootGroup: rootGroup, version: version, options: opt, cfg: ecfg}, nil
+}
+
+func NewServer(version string, cfg ...config.Config) (*Server, error) {
+	return NewServerWithName("", version, cfg...)
 }
 
 func (s *Server) AddMiddleware(middleware ...echo.MiddlewareFunc) {
