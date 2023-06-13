@@ -6,4 +6,5 @@ type Config struct {
 	MaxOpen     int
 	MaxIdle     int
 	MaxLifetime int
+	QueryLevel  string
 }

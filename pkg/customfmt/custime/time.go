@@ -10,6 +10,11 @@ const defaultFmt = "2006-01-02 15:04:05"
 
 type FormatTime time.Time
 
+func Now() *FormatTime {
+	current := FormatTime(time.Now())
+	return &current
+}
+
 func (t *FormatTime) UnmarshalJSON(data []byte) error {
 	if string(data) == "" || string(data) == "null" {
 		return nil

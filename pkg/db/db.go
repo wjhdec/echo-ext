@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"github.com/jmoiron/sqlx"
 	sqldblogger "github.com/simukti/sqldb-logger"
 	"github.com/wjhdec/echo-ext/pkg/config"
 	"github.com/wjhdec/echo-ext/pkg/elog"
@@ -16,37 +15,35 @@ var (
 )
 
 type DB interface {
-	GetByName(name string) (*sqlx.DB, error)
+	GetByName(name string) (*sql.DB, error)
 }
 
 func New(cfg config.Config) DB {
 	once.Do(func() {
-		innerDB = &db{cfg: cfg, dbMap: make(map[string]*sqlx.DB)}
+		innerDB = &db{cfg: cfg, dbMap: make(map[string]*sql.DB)}
 	})
 	return innerDB
 }
 
 type db struct {
-	dbMap map[string]*sqlx.DB
+	dbMap map[string]*sql.DB
 	cfg   config.Config
 }
 
-func (d *db) GetByName(name string) (*sqlx.DB, error) {
-	db := d.dbMap[name]
+func (d *db) GetByName(name string) (db *sql.DB, err error) {
+	db = d.dbMap[name]
 	if db != nil {
-		return db, nil
+		return
 	} else {
 		dbCfg := new(Config)
-		err := d.cfg.UnmarshalByKey("db."+name, dbCfg)
-		if err != nil {
-			return nil, err
+		if err = d.cfg.UnmarshalByKey("db."+name, dbCfg); err != nil {
+			return
 		}
-		db, err := newDB(dbCfg)
-		if err != nil {
-			return nil, err
+		if db, err = newDB(dbCfg); err != nil {
+			return
 		}
 		d.dbMap[name] = db
-		return db, nil
+		return
 	}
 }
 

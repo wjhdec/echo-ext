@@ -8,7 +8,6 @@
 
 * echo
 * zap
-* sqlx
 * viper
 * sqldb-logger
 
