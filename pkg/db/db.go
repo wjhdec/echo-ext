@@ -5,6 +5,7 @@ import (
 	sqldblogger "github.com/simukti/sqldb-logger"
 	"github.com/wjhdec/echo-ext/pkg/config"
 	"github.com/wjhdec/echo-ext/pkg/elog"
+	"strings"
 	"sync"
 	"time"
 )
@@ -47,15 +48,33 @@ func (d *db) GetByName(name string) (db *sql.DB, err error) {
 	}
 }
 
-func newDB(cfg *Config) (*sqlx.DB, error) {
+func parseQueryLevel(level string) sqldblogger.Level {
+	switch strings.ToLower(level) {
+	case "trace":
+		return sqldblogger.LevelTrace
+	case "debug":
+		return sqldblogger.LevelDebug
+	case "info":
+		return sqldblogger.LevelInfo
+	case "error":
+		return sqldblogger.LevelError
+	default:
+		return sqldblogger.LevelDebug
+	}
+}
+
+func newDB(cfg *Config) (*sql.DB, error) {
 	db, err := sql.Open(cfg.Driver, cfg.Dsn)
 	if err != nil {
 		return nil, err
 	}
-	db = sqldblogger.OpenDriver(cfg.Dsn, db.Driver(), NewAdaptor(elog.GlobalLogger()))
-	connect := sqlx.NewDb(db, cfg.Driver)
-	connect.SetMaxIdleConns(cfg.MaxIdle)
-	connect.SetConnMaxIdleTime(time.Duration(cfg.MaxIdle) * time.Second)
-	connect.SetConnMaxLifetime(time.Duration(cfg.MaxLifetime) * time.Second)
-	return connect, nil
+	lvl := parseQueryLevel(cfg.QueryLevel)
+	db = sqldblogger.OpenDriver(cfg.Dsn, db.Driver(), NewAdaptor(elog.GlobalLogger()),
+		sqldblogger.WithQueryerLevel(lvl),
+		sqldblogger.WithPreparerLevel(lvl),
+		sqldblogger.WithExecerLevel(lvl))
+	db.SetMaxIdleConns(cfg.MaxIdle)
+	db.SetConnMaxIdleTime(time.Duration(cfg.MaxIdle) * time.Second)
+	db.SetConnMaxLifetime(time.Duration(cfg.MaxLifetime) * time.Second)
+	return db, nil
 }

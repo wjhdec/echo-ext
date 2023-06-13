@@ -9,6 +9,7 @@ port = "8888"
 [db.local]
 driver = "pgx"
 dsn = "host=localhost user=postgres password=postgres dbname=postgres port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+queryLevel = "debug"
 
 [logger]
 level = "debug"
