@@ -1,6 +1,7 @@
 package custime
 
 import (
+	"database/sql/driver"
 	"fmt"
 	"strings"
 	"time"
@@ -8,11 +9,12 @@ import (
 
 const defaultFmt = "2006-01-02 15:04:05"
 
-type FormatTime time.Time
+type FormatTime struct {
+	time.Time
+}
 
 func Now() *FormatTime {
-	current := FormatTime(time.Now())
-	return &current
+	return &FormatTime{time.Now()}
 }
 
 func (t *FormatTime) UnmarshalJSON(data []byte) error {
@@ -23,11 +25,27 @@ func (t *FormatTime) UnmarshalJSON(data []byte) error {
 	str := string(data)
 	timeStr := strings.Trim(str, "\"")
 	t1, err := time.Parse(defaultFmt, timeStr)
-	*t = FormatTime(t1)
+	t.Time = t1
 	return err
 }
 
 func (t *FormatTime) MarshalJSON() ([]byte, error) {
-	formatted := fmt.Sprintf("\"%v\"", time.Time(*t).Format(defaultFmt))
+	formatted := fmt.Sprintf("\"%s\"", t.Time.Format(defaultFmt))
 	return []byte(formatted), nil
+}
+
+func (t FormatTime) Scan(value any) error {
+	switch tv := value.(type) {
+	case time.Time:
+		t.Time = tv
+	case FormatTime:
+		t = tv
+	default:
+		return fmt.Errorf("cannot scan type%T into FormatTime", value)
+	}
+	return nil
+}
+
+func (t FormatTime) Value() (driver.Value, error) {
+	return t.Time, nil
 }
