@@ -25,4 +25,7 @@ type Logger interface {
 	Errorw(msg string, kv ...any)
 	Panicw(msg string, kv ...any)
 	Fatalw(msg string, kv ...any)
+
+	// Origin 原始logger，可能某些情况会用到
+	Origin() any
 }

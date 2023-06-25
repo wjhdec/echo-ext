@@ -27,6 +27,10 @@ func (l *baseLogger) Output() io.Writer {
 	return l.writer
 }
 
+func (l *baseLogger) Origin() any {
+	return l.SugaredLogger
+}
+
 func NewLogger(cfg config.Config) Logger {
 	jack := new(lumberjack.Logger)
 	if cfg != nil {
@@ -60,6 +64,7 @@ func NewLogger(cfg config.Config) Logger {
 	}
 	zCore := zapcore.NewCore(encoder, writer, level)
 	l := zap.New(zCore, zap.AddStacktrace(zapcore.WarnLevel))
+	l.Sugar().Desugar()
 	return &baseLogger{
 		SugaredLogger: *l.Sugar(),
 		writer:        writer,
