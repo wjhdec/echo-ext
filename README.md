@@ -9,8 +9,6 @@
 * echo
 * zap
 * viper
-* sqldb-logger
-
 
 ## 使用示例
 

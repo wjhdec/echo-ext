@@ -22,7 +22,7 @@ type Req struct {
 }
 
 func NewTest1Handler() server.HandlerEnable {
-	return server.NewJsonHandler("", http.MethodGet, func(req Req) (*ResultInfo, error) {
+	return server.NewJsonHandler("", http.MethodGet, func(_ echo.Context, req Req) (*ResultInfo, error) {
 		return &ResultInfo{Value: req.Name + "_" + fmt.Sprintf("%f", req.Value)}, nil
 	})
 }
