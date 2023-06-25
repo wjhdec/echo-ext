@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"github.com/spf13/viper"
 )
 
@@ -37,7 +38,11 @@ func (c *config) Reload() error {
 }
 
 func (c *config) UnmarshalByKey(key string, v any) error {
-	return c.Viper.Sub(key).Unmarshal(v)
+	cfg := c.Viper.Sub(key)
+	if cfg == nil {
+		return fmt.Errorf("can not find key: [%s] in config file", key)
+	}
+	return cfg.Unmarshal(v)
 }
 
 func (c *config) SetByKey(key string, v any) error {

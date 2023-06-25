@@ -2,10 +2,10 @@ package server
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/wjhdec/echo-ext/pkg/customfmt/custime"
 	"github.com/wjhdec/echo-ext/pkg/elog"
-	"net/http"
-	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -21,7 +21,7 @@ type ErrResponse struct {
 
 func NewErrResponse(err *echo.HTTPError, c echo.Context) *ErrResponse {
 	return &ErrResponse{
-		Timestamp: custime.FormatTime(time.Now()),
+		Timestamp: *custime.Now(),
 		Status:    err.Code,
 		Error:     http.StatusText(err.Code),
 		Message:   fmt.Sprintf("%s", err.Message),

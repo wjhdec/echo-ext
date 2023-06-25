@@ -7,7 +7,7 @@ import (
 )
 
 // NewJsonHandler 新建方法
-func NewJsonHandler[T, R any](path, method string, f func(req T) (resp R, err error), middleware ...echo.MiddlewareFunc) HandlerEnable {
+func NewJsonHandler[T, R any](path, method string, f func(ctx echo.Context, req T) (resp R, err error), middleware ...echo.MiddlewareFunc) HandlerEnable {
 	return &jsonHandler[T, R]{method: method, path: path, handlerFunc: f, middleware: middleware}
 }
 
@@ -15,7 +15,7 @@ type jsonHandler[T, R any] struct {
 	// method 执行方法 e.g. http.MethodGet http.MethodPut
 	method      string
 	path        string
-	handlerFunc func(T) (R, error)
+	handlerFunc func(echo.Context, T) (R, error)
 	middleware  []echo.MiddlewareFunc
 }
 
@@ -33,7 +33,7 @@ func (h *jsonHandler[T, R]) HandlerFunc() echo.HandlerFunc {
 		if err := c.Bind(&t); err != nil {
 			return err
 		}
-		r, err := h.handlerFunc(t)
+		r, err := h.handlerFunc(c, t)
 		if err != nil {
 			return err
 		}
