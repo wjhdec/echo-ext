@@ -1,0 +1,49 @@
+linters:
+  enable:
+    - gocyclo
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - deadcode
+    - gosimple
+    - goimports
+
+linters-settings:
+  gocyclo:
+    min-complexity: 10
+  revive:
+    ignore-generated-headers: true
+    rules:
+      - name: var-naming
+        arguments: [[ID, API, SQL, JSON, HTTP], []]
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: empty-block
+      - name: error-naming
+      - name: error-return
+      - name: error-strings
+      - name: errorf
+      - name: exported
+        arguments: [disableStutteringCheck]
+      - name: if-return
+      - name: increment-decrement
+      - name: indent-error-flow
+        arguments: ["preserverScope"]
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: redefines-builtin-id
+      - name: superfluous-else
+      - name: time-naming
+      - name: var-declaration
+      - name: unexported-return
+      - name: unreachable-code
+      - name: unhandled-error
+        arguments: ["fmt.Printf", "fmt.Println"]
+      - name: unnecessary-stmt
+      - name: unused-parameter
+      - name: confusing-naming
+      - name: use-any
+      - name: waitgroup-by-value

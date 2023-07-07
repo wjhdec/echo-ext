@@ -31,10 +31,10 @@ func NewErrResponse(err *echo.HTTPError, c echo.Context) *ErrResponse {
 
 // CustomHttpErrorHandler 自定义错误处理
 func CustomHttpErrorHandler(err error, c echo.Context) {
-	elog.Errorf("%+v", err)
+	elog.Error("unknown error", err)
 	if !c.Response().Committed {
 		if err := c.JSON(getErrorResponse(err, c)); err != nil {
-			elog.Errorf("%+v", err)
+			elog.Error(err)
 		}
 	} else {
 		elog.Warn("already committed")
@@ -42,7 +42,7 @@ func CustomHttpErrorHandler(err error, c echo.Context) {
 }
 
 // getErrorResponse 获取返回，返回中int为status
-func getErrorResponse(err error, c echo.Context) (int, interface{}) {
+func getErrorResponse(err error, c echo.Context) (int, any) {
 	switch e := err.(type) {
 	case *echo.HTTPError:
 		return e.Code, NewErrResponse(e, c)

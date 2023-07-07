@@ -8,6 +8,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	"github.com/wjhdec/echo-ext/pkg/config"
 	"github.com/wjhdec/echo-ext/pkg/elog"
 	"github.com/wjhdec/echo-ext/pkg/server"
 )
@@ -34,6 +36,11 @@ func NewDemoRouter(group *echo.Group) server.Router {
 }
 
 func main() {
+	cfg, err := config.New()
+	if err != nil {
+		elog.Panic(err)
+	}
+	elog.OverrideGlobalLogger(elog.NewLogger(cfg))
 	svr, err := server.NewServer("v0.0")
 	if err != nil {
 		elog.Error(err)

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 const defaultFmt = "2006-01-02 15:04:05"
@@ -21,12 +23,11 @@ func (t *FormatTime) UnmarshalJSON(data []byte) error {
 	if string(data) == "" || string(data) == "null" {
 		return nil
 	}
-	var err error
 	str := string(data)
 	timeStr := strings.Trim(str, "\"")
 	t1, err := time.Parse(defaultFmt, timeStr)
 	t.Time = t1
-	return err
+	return errors.WithStack(err)
 }
 
 func (t *FormatTime) MarshalJSON() ([]byte, error) {
@@ -41,7 +42,7 @@ func (t FormatTime) Scan(value any) error {
 	case FormatTime:
 		t = tv
 	default:
-		return fmt.Errorf("cannot scan type%T into FormatTime", value)
+		return errors.Errorf("cannot scan type%T into FormatTime", value)
 	}
 	return nil
 }

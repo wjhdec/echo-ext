@@ -1,7 +1,7 @@
 package config
 
 import (
-	"fmt"
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
 
@@ -23,7 +23,7 @@ func New(path ...string) (Config, error) {
 	v.AddConfigPath(".")
 	v.AddConfigPath("./configs")
 	if err := v.ReadInConfig(); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 	return &config{Viper: *v}, nil
 }
@@ -40,7 +40,7 @@ func (c *config) Reload() error {
 func (c *config) UnmarshalByKey(key string, v any) error {
 	cfg := c.Viper.Sub(key)
 	if cfg == nil {
-		return fmt.Errorf("can not find key: [%s] in config file", key)
+		return errors.Errorf("can not find key: [%s] in config file", key)
 	}
 	return cfg.Unmarshal(v)
 }

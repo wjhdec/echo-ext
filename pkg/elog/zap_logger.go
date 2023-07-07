@@ -2,36 +2,18 @@ package elog
 
 import (
 	"fmt"
-	"github.com/wjhdec/echo-ext/pkg/config"
-	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
 	"os"
+
+	"gopkg.in/natefinch/lumberjack.v2"
+
+	"github.com/wjhdec/echo-ext/pkg/config"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-type LoggerConfig struct {
-	lumberjack.Logger
-	Level string
-}
-
-var _ Logger = &baseLogger{}
-
-type baseLogger struct {
-	zap.SugaredLogger
-	writer io.Writer
-}
-
-func (l *baseLogger) Output() io.Writer {
-	return l.writer
-}
-
-func (l *baseLogger) Origin() any {
-	return l.SugaredLogger
-}
-
-func NewLogger(cfg config.Config) Logger {
+func NewLogger(cfg config.Config) (*zap.Logger, io.Writer) {
 	jack := new(lumberjack.Logger)
 	if cfg != nil {
 		if err := cfg.UnmarshalByKey("logger", jack); err != nil {
@@ -63,21 +45,13 @@ func NewLogger(cfg config.Config) Logger {
 		}
 	}
 	zCore := zapcore.NewCore(encoder, writer, level)
-	l := zap.New(zCore, zap.AddStacktrace(zapcore.WarnLevel))
-	l.Sugar().Desugar()
-	return &baseLogger{
-		SugaredLogger: *l.Sugar(),
-		writer:        writer,
-	}
+	return zap.New(zCore, zap.AddStacktrace(zapcore.WarnLevel)), writer
 }
 
-func NewConsoleLogger() Logger {
-	build, err := zap.NewDevelopmentConfig().Build()
+func NewConsoleLogger() *zap.Logger {
+	logger, err := zap.NewDevelopmentConfig().Build()
 	if err != nil {
 		fmt.Printf("build log error: %+v \n", err)
 	}
-	return &baseLogger{
-		SugaredLogger: *build.Sugar(),
-		writer:        os.Stdout,
-	}
+	return logger
 }

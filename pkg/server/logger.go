@@ -1,24 +1,26 @@
 package server
 
 import (
+	"io"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
-	"github.com/wjhdec/echo-ext/pkg/elog"
-	"io"
+	"go.uber.org/zap"
 )
 
 var _ echo.Logger = (*echoLogger)(nil)
 
-func newEchoLogger(log elog.Logger) *echoLogger {
-	return &echoLogger{log}
+func newEchoLogger(log *zap.Logger, out io.Writer) *echoLogger {
+	return &echoLogger{log.Sugar(), out}
 }
 
 type echoLogger struct {
-	elog.Logger
+	*zap.SugaredLogger
+	out io.Writer
 }
 
 func (e echoLogger) Output() io.Writer {
-	return e.Logger.Output()
+	return e.out
 }
 
 func (e echoLogger) SetOutput(io.Writer) {
@@ -42,37 +44,37 @@ func (e echoLogger) SetHeader(string) {
 }
 
 func (e echoLogger) Print(i ...interface{}) {
-	e.Logger.Debug(i...)
+	e.Debug(i...)
 }
 
 func (e echoLogger) Printf(format string, args ...interface{}) {
-	e.Logger.Debugf(format, args...)
+	e.Debugf(format, args...)
 }
 
 func (e echoLogger) Printj(j log.JSON) {
-	e.Logger.Debug(j)
+	e.Desugar().Debug("", zap.Any("", j))
 }
 
 func (e echoLogger) Debugj(j log.JSON) {
-	e.Logger.Debug(j)
+	e.Desugar().Debug("", zap.Any("", j))
 }
 
 func (e echoLogger) Infoj(j log.JSON) {
-	e.Logger.Info(j)
+	e.Desugar().Info("", zap.Any("", j))
 }
 
 func (e echoLogger) Warnj(j log.JSON) {
-	e.Logger.Warn(j)
+	e.Desugar().Warn("", zap.Any("", j))
 }
 
 func (e echoLogger) Errorj(j log.JSON) {
-	e.Logger.Error(j)
+	e.Desugar().Error("", zap.Any("", j))
 }
 
 func (e echoLogger) Fatalj(j log.JSON) {
-	e.Logger.Fatal(j)
+	e.Desugar().Fatal("", zap.Any("", j))
 }
 
 func (e echoLogger) Panicj(j log.JSON) {
-	e.Logger.Panic(j)
+	e.Desugar().Panic("", zap.Any("", j))
 }

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+
 	"github.com/wjhdec/echo-ext/pkg/config"
 	"github.com/wjhdec/echo-ext/pkg/elog"
 )
@@ -24,7 +25,6 @@ type Server struct {
 
 func NewServerWithName(name string, version string, cfg ...config.Config) (*Server, error) {
 	e := echo.New()
-	e.Logger = newEchoLogger(elog.GlobalLogger())
 	e.HideBanner = true
 	e.HTTPErrorHandler = CustomHttpErrorHandler
 	var ecfg config.Config
@@ -37,6 +37,8 @@ func NewServerWithName(name string, version string, cfg ...config.Config) (*Serv
 		}
 		ecfg = innerCfg
 	}
+	e.Logger = newEchoLogger(elog.GlobalLogger(), elog.Out())
+
 	svrName := "server"
 	if name != "" {
 		svrName = "server." + name
@@ -90,7 +92,7 @@ func (s *Server) RegisterRouters() {
 func (s *Server) Run() {
 	s.RegisterRouters()
 	s.rootGroup.GET("/info", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, map[string]interface{}{
+		return c.JSON(http.StatusOK, echo.Map{
 			"version":      s.version,  // git 中对应版本
 			"current_time": time.Now(), // git 当前时间
 		})
@@ -102,7 +104,7 @@ func (s *Server) Run() {
 	}
 
 	go func() {
-		elog.Infow("star server", "version", s.version, "port", opt.Port, "config", s.cfg.ConfigFileUsed())
+		elog.Infof("star server version: %s, port: %d, config: %s", s.version, opt.Port, s.cfg.ConfigFileUsed())
 		if opt.TLSKey == "" || opt.TLSPem == "" {
 			elog.Debug("not use tls")
 			if err := srv.ListenAndServe(); err != http.ErrServerClosed {
