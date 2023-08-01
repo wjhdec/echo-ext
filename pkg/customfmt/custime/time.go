@@ -15,8 +15,8 @@ type FormatTime struct {
 	time.Time
 }
 
-func Now() *FormatTime {
-	return &FormatTime{time.Now()}
+func Now() FormatTime {
+	return FormatTime{time.Now()}
 }
 
 func (t *FormatTime) UnmarshalJSON(data []byte) error {
@@ -35,12 +35,12 @@ func (t *FormatTime) MarshalJSON() ([]byte, error) {
 	return []byte(formatted), nil
 }
 
-func (t FormatTime) Scan(value any) error {
+func (t *FormatTime) Scan(value any) error {
 	switch tv := value.(type) {
 	case time.Time:
 		t.Time = tv
 	case FormatTime:
-		t = tv
+		*t = tv
 	default:
 		return errors.Errorf("cannot scan type%T into FormatTime", value)
 	}

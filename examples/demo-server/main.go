@@ -41,7 +41,7 @@ func main() {
 		elog.Panic(err)
 	}
 	elog.OverrideGlobalLogger(elog.NewLogger(cfg))
-	svr, err := server.NewServer("v0.0")
+	svr, err := server.NewServer("v0.0", nil)
 	if err != nil {
 		elog.Error(err)
 	}

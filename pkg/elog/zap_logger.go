@@ -45,7 +45,7 @@ func NewLogger(cfg config.Config) (*zap.Logger, io.Writer) {
 		}
 	}
 	zCore := zapcore.NewCore(encoder, writer, level)
-	return zap.New(zCore, zap.AddStacktrace(zapcore.WarnLevel)), writer
+	return zap.New(zCore, zap.AddStacktrace(zapcore.ErrorLevel)), writer
 }
 
 func NewConsoleLogger() *zap.Logger {

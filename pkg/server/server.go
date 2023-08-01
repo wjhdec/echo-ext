@@ -14,16 +14,21 @@ import (
 	"github.com/wjhdec/echo-ext/pkg/elog"
 )
 
+type ServerConfig struct {
+	Version      string
+	GlobalConfig config.Config
+	AuthorMap    map[string]Author
+	ServerOpts   *Options
+}
+
 type Server struct {
 	e         *echo.Echo
 	rootGroup *echo.Group
-	version   string
-	options   *Options
-	cfg       config.Config
 	routers   []Router
+	*ServerConfig
 }
 
-func NewServerWithName(name string, version string, cfg ...config.Config) (*Server, error) {
+func NewServerWithName(name string, version string, authMap map[string]Author, cfg ...config.Config) (*Server, error) {
 	e := echo.New()
 	e.HideBanner = true
 	e.HTTPErrorHandler = CustomHttpErrorHandler
@@ -45,11 +50,18 @@ func NewServerWithName(name string, version string, cfg ...config.Config) (*Serv
 	}
 	opt := NewOptions(ecfg, svrName)
 	rootGroup := e.Group(opt.BasePath)
-	return &Server{e: e, rootGroup: rootGroup, version: version, options: opt, cfg: ecfg}, nil
+	return &Server{e: e, rootGroup: rootGroup,
+		ServerConfig: &ServerConfig{
+			Version:      version,
+			GlobalConfig: ecfg,
+			AuthorMap:    authMap,
+			ServerOpts:   opt,
+		},
+	}, nil
 }
 
-func NewServer(version string, cfg ...config.Config) (*Server, error) {
-	return NewServerWithName("", version, cfg...)
+func NewServer(version string, authMap map[string]Author, cfg ...config.Config) (*Server, error) {
+	return NewServerWithName("", version, authMap, cfg...)
 }
 
 func (s *Server) AddMiddleware(middleware ...echo.MiddlewareFunc) {
@@ -64,15 +76,19 @@ func (s *Server) RootGroup() *echo.Group {
 	return s.rootGroup
 }
 
+func (s *Server) Config() config.Config {
+	return s.GlobalConfig
+}
+
 func (s *Server) AddRouter(router ...Router) {
 	s.routers = append(s.routers, router...)
 }
 
-type RouterFnc func(group *echo.Group, cfg config.Config) (Router, error)
+type RouterFnc func(group *echo.Group, svrCfg *ServerConfig) (Router, error)
 
 func (s *Server) AddRouterFnc(fncs ...RouterFnc) error {
 	for _, fnc := range fncs {
-		r, err := fnc(s.rootGroup, s.cfg)
+		r, err := fnc(s.rootGroup, s.ServerConfig)
 		if err != nil {
 			return err
 		}
@@ -93,18 +109,18 @@ func (s *Server) Run() {
 	s.RegisterRouters()
 	s.rootGroup.GET("/info", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, echo.Map{
-			"version":      s.version,  // git 中对应版本
+			"version":      s.Version,  // git 中对应版本
 			"current_time": time.Now(), // git 当前时间
 		})
 	})
-	opt := s.options
+	opt := s.ServerOpts
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", opt.Port),
 		Handler: s.e,
 	}
 
 	go func() {
-		elog.Infof("star server version: %s, port: %d, config: %s", s.version, opt.Port, s.cfg.ConfigFileUsed())
+		elog.Infof("star server version: %s, port: %d, config: %s", s.Version, opt.Port, s.GlobalConfig.ConfigFileUsed())
 		if opt.TLSKey == "" || opt.TLSPem == "" {
 			elog.Debug("not use tls")
 			if err := srv.ListenAndServe(); err != http.ErrServerClosed {

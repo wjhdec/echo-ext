@@ -6,8 +6,8 @@ import (
 	"github.com/wjhdec/echo-ext/pkg/server"
 )
 
-func LoadRouter(cfg config.Config, routerFunc func(group *echo.Group, cfg config.Config) (server.Router, error), middleware ...echo.MiddlewareFunc) (*server.Server, error) {
-	serv, err := server.NewServer("test", cfg)
+func LoadRouter(cfg config.Config, routerFunc server.RouterFnc, authorMap map[string]server.Author, middleware ...echo.MiddlewareFunc) (*server.Server, error) {
+	serv, err := server.NewServer("test", authorMap, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -18,7 +18,7 @@ func LoadRouter(cfg config.Config, routerFunc func(group *echo.Group, cfg config
 	if len(middleware) > 0 {
 		serv.AddMiddleware(middleware...)
 	}
-	if r, err := routerFunc(baseGroup, cfg); err != nil {
+	if r, err := routerFunc(baseGroup, serv.ServerConfig); err != nil {
 		return nil, err
 	} else {
 		serv.AddRouter(r)

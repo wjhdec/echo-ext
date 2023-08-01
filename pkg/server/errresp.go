@@ -21,7 +21,7 @@ type ErrResponse struct {
 
 func NewErrResponse(err *echo.HTTPError, c echo.Context) *ErrResponse {
 	return &ErrResponse{
-		Timestamp: *custime.Now(),
+		Timestamp: custime.Now(),
 		Status:    err.Code,
 		Error:     http.StatusText(err.Code),
 		Message:   fmt.Sprintf("%s", err.Message),
@@ -31,7 +31,7 @@ func NewErrResponse(err *echo.HTTPError, c echo.Context) *ErrResponse {
 
 // CustomHttpErrorHandler 自定义错误处理
 func CustomHttpErrorHandler(err error, c echo.Context) {
-	elog.Error("unknown error", err)
+	elog.Error("unknown error: ", err)
 	if !c.Response().Committed {
 		if err := c.JSON(getErrorResponse(err, c)); err != nil {
 			elog.Error(err)
