@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,57 +12,36 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/wjhdec/echo-ext/pkg/config"
-	"github.com/wjhdec/echo-ext/pkg/elog"
 )
 
 type ServerConfig struct {
-	Version      string
-	GlobalConfig config.Config
-	AuthorMap    map[string]Author
-	ServerOpts   *Options
+	ConfigOptions *ConfigOptions
+	ServerOptions *ServerOptions
 }
 
 type Server struct {
+	Config ServerConfig
+
 	e         *echo.Echo
 	rootGroup *echo.Group
 	routers   []Router
-	*ServerConfig
 }
 
-func NewServerWithName(name string, version string, authMap map[string]Author, cfg ...config.Config) (*Server, error) {
+func NewServer(opt *ServerOptions) (*Server, error) {
 	e := echo.New()
 	e.HideBanner = true
 	e.HTTPErrorHandler = CustomHttpErrorHandler
-	var ecfg config.Config
-	if len(cfg) > 0 {
-		ecfg = cfg[0]
-	} else {
-		innerCfg, err := config.New()
-		if err != nil {
-			return nil, err
-		}
-		ecfg = innerCfg
-	}
-	e.Logger = newEchoLogger(elog.GlobalLogger(), elog.Out())
 
 	svrName := "server"
-	if name != "" {
-		svrName = "server." + name
+	if opt.Name != "" {
+		svrName = "server." + opt.Name
 	}
-	opt := NewOptions(ecfg, svrName)
-	rootGroup := e.Group(opt.BasePath)
-	return &Server{e: e, rootGroup: rootGroup,
-		ServerConfig: &ServerConfig{
-			Version:      version,
-			GlobalConfig: ecfg,
-			AuthorMap:    authMap,
-			ServerOpts:   opt,
-		},
+	cfgOpt := NewConfigOptions(svrName)
+	rootGroup := e.Group(cfgOpt.BasePath)
+	return &Server{
+		e: e, rootGroup: rootGroup,
+		Config: ServerConfig{cfgOpt, opt},
 	}, nil
-}
-
-func NewServer(version string, authMap map[string]Author, cfg ...config.Config) (*Server, error) {
-	return NewServerWithName("", version, authMap, cfg...)
 }
 
 func (s *Server) AddMiddleware(middleware ...echo.MiddlewareFunc) {
@@ -76,19 +56,15 @@ func (s *Server) RootGroup() *echo.Group {
 	return s.rootGroup
 }
 
-func (s *Server) Config() config.Config {
-	return s.GlobalConfig
-}
-
 func (s *Server) AddRouter(router ...Router) {
 	s.routers = append(s.routers, router...)
 }
 
-type RouterFnc func(group *echo.Group, svrCfg *ServerConfig) (Router, error)
+type RouterFnc func(group *echo.Group, config ServerConfig) (Router, error)
 
 func (s *Server) AddRouterFnc(fncs ...RouterFnc) error {
 	for _, fnc := range fncs {
-		r, err := fnc(s.rootGroup, s.ServerConfig)
+		r, err := fnc(s.rootGroup, s.Config)
 		if err != nil {
 			return err
 		}
@@ -107,29 +83,30 @@ func (s *Server) RegisterRouters() {
 
 func (s *Server) Run() {
 	s.RegisterRouters()
+	svrOpt := s.Config.ServerOptions
+	cfgOpt := s.Config.ConfigOptions
 	s.rootGroup.GET("/info", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, echo.Map{
-			"version":      s.Version,  // git 中对应版本
-			"current_time": time.Now(), // git 当前时间
+			"version":      svrOpt.Version,
+			"current_time": time.Now(),
 		})
 	})
-	opt := s.ServerOpts
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%d", opt.Port),
+		Addr:    fmt.Sprintf(":%d", cfgOpt.Port),
 		Handler: s.e,
 	}
 
 	go func() {
-		elog.Infof("star server version: %s, port: %d, config: %s", s.Version, opt.Port, s.GlobalConfig.ConfigFileUsed())
-		if opt.TLSKey == "" || opt.TLSPem == "" {
-			elog.Debug("not use tls")
+		slog.Info("start server", "version", svrOpt.Version, "port", cfgOpt.Port, "config-file", config.ConfigFileUsed())
+		if cfgOpt.TLSKey == "" || cfgOpt.TLSPem == "" {
+			slog.Debug("not use tls")
 			if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-				elog.Fatalf("Start service error: %+v", err)
+				slog.Error("Start service error", err)
 			}
 		} else {
-			elog.Debug("use tls")
-			if err := srv.ListenAndServeTLS(opt.TLSPem, opt.TLSKey); err != http.ErrServerClosed {
-				elog.Fatalf("Start service error: %+v", err)
+			slog.Debug("use tls")
+			if err := srv.ListenAndServeTLS(cfgOpt.TLSPem, cfgOpt.TLSKey); err != http.ErrServerClosed {
+				slog.Error("Start service error", err)
 			}
 		}
 	}()
@@ -137,11 +114,11 @@ func (s *Server) Run() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
-	elog.Info("shutdown server ...")
+	slog.Info("shutdown server ...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := s.e.Shutdown(ctx); err != nil {
-		elog.Errorf("server shutdown error: %+v", err)
+		slog.Error("server shutdown error", err)
 	}
 }

@@ -31,7 +31,7 @@ func (t *FormatTime) UnmarshalJSON(data []byte) error {
 }
 
 func (t *FormatTime) MarshalJSON() ([]byte, error) {
-	formatted := fmt.Sprintf("\"%s\"", t.Time.Format(defaultFmt))
+	formatted := fmt.Sprintf("\"%s\"", t.Format(defaultFmt))
 	return []byte(formatted), nil
 }
 

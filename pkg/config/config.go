@@ -1,63 +1,16 @@
 package config
 
-import (
-	"github.com/pkg/errors"
-	"github.com/spf13/viper"
-)
-
 type Config interface {
+	// Reload 重新加载配置
 	Reload() error
+	// UnmarshalByKey 根据key填充内容
 	UnmarshalByKey(key string, v any) error
+	// ValueByKey 根据key获取内容，返回 any，找不到则返回 nil
 	ValueByKey(key string) any
+	// StrValueByKey 根据key获取字符串内容，找不到返回空字符串
 	StrValueByKey(key string) string
+	// ConfigFileUsed 返回使用的配置文件路径
 	ConfigFileUsed() string
+	// SetByKey 覆盖配置
 	SetByKey(key string, v any) error
-}
-
-// New 新建配置，可以设置多个配置读取位置
-func New(path ...string) (Config, error) {
-	v := viper.New()
-	for _, p := range path {
-		v.AddConfigPath(p)
-	}
-	v.AddConfigPath(".")
-	v.AddConfigPath("./configs")
-	if err := v.ReadInConfig(); err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return &config{Viper: *v}, nil
-}
-
-type config struct {
-	viper.Viper
-}
-
-// Reload 重写加载
-func (c *config) Reload() error {
-	return c.Viper.ReadInConfig()
-}
-
-func (c *config) UnmarshalByKey(key string, v any) error {
-	cfg := c.Viper.Sub(key)
-	if cfg == nil {
-		return errors.Errorf("can not find key: [%s] in config file", key)
-	}
-	return cfg.Unmarshal(v)
-}
-
-func (c *config) SetByKey(key string, v any) error {
-	c.Viper.Set(key, v)
-	return nil
-}
-
-func (c *config) ValueByKey(key string) any {
-	return c.Viper.Get(key)
-}
-
-func (c *config) StrValueByKey(key string) string {
-	return c.Viper.GetString(key)
-}
-
-func (c *config) ConfigFileUsed() string {
-	return c.Viper.ConfigFileUsed()
 }

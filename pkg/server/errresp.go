@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/wjhdec/echo-ext/pkg/customfmt/custime"
-	"github.com/wjhdec/echo-ext/pkg/elog"
-
 	"github.com/labstack/echo/v4"
+
+	"github.com/wjhdec/echo-ext/pkg/customfmt/custime"
+	"github.com/wjhdec/echo-ext/pkg/logext"
+	"github.com/wjhdec/echo-ext/pkg/set"
 )
 
 // ErrResponse 返回的错误结构
@@ -29,26 +30,28 @@ func NewErrResponse(err *echo.HTTPError, c echo.Context) *ErrResponse {
 	}
 }
 
-// CustomHttpErrorHandler 自定义错误处理
 func CustomHttpErrorHandler(err error, c echo.Context) {
-	elog.Error("unknown error: ", err)
 	if !c.Response().Committed {
 		if err := c.JSON(getErrorResponse(err, c)); err != nil {
-			elog.Error(err)
+			logext.LogError(err)
 		}
-	} else {
-		elog.Warn("already committed")
 	}
 }
 
 // getErrorResponse 获取返回，返回中int为status
 func getErrorResponse(err error, c echo.Context) (int, any) {
+	ignoreCode := set.NewWithSlice([]int{401, 403, 404})
 	switch e := err.(type) {
 	case *echo.HTTPError:
+		if !ignoreCode.Contains(e.Code) {
+			logext.LogError(err)
+		}
 		return e.Code, NewErrResponse(e, c)
 	default:
+		logext.LogError(err)
+		code := http.StatusInternalServerError
 		he := &echo.HTTPError{
-			Code: http.StatusInternalServerError, Message: err.Error(),
+			Code: code, Message: err.Error(),
 		}
 		return he.Code, NewErrResponse(he, c)
 	}

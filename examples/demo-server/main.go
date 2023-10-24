@@ -1,16 +1,17 @@
-// Package main 测试内容
-// 启动后访问 http://localhost:8888/my-test?name=a&value=200
 package main
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-
+	"github.com/pkg/errors"
+	slogecho "github.com/samber/slog-echo"
+	"github.com/spf13/viper"
 	"github.com/wjhdec/echo-ext/pkg/config"
-	"github.com/wjhdec/echo-ext/pkg/elog"
 	"github.com/wjhdec/echo-ext/pkg/server"
 )
 
@@ -25,7 +26,7 @@ type Req struct {
 
 func NewTest1Handler() server.HandlerEnable {
 	return server.NewJsonHandler("", http.MethodGet, func(_ echo.Context, req Req) (*ResultInfo, error) {
-		return &ResultInfo{Value: req.Name + "_" + fmt.Sprintf("%f", req.Value)}, nil
+		return &ResultInfo{Value: req.Name + "_" + fmt.Sprintf("%f", req.Value)}, errors.Errorf("this is error")
 	})
 }
 
@@ -35,17 +36,61 @@ func NewDemoRouter(group *echo.Group) server.Router {
 	return router
 }
 
+type DemoConfig struct {
+	viper.Viper
+}
+
+func NewConfig() *DemoConfig {
+	v := viper.New()
+	v.AddConfigPath(".")
+	v.AddConfigPath("../../configs/")
+	if err := v.ReadInConfig(); err != nil {
+		panic(err)
+	}
+	return &DemoConfig{*v}
+}
+
+func (c *DemoConfig) Reload() error {
+	return c.ReadInConfig()
+}
+
+// UnmarshalByKey 根据key填充内容
+func (c *DemoConfig) UnmarshalByKey(key string, v any) error {
+	cfg := c.Sub(key)
+	if cfg != nil {
+		return cfg.Unmarshal(v)
+	}
+	return nil
+}
+
+// ValueByKey 根据key获取内容，返回 any，找不到则返回 nil
+func (c *DemoConfig) ValueByKey(key string) any {
+	return c.Get(key)
+}
+
+// StrValueByKey 根据key获取字符串内容，找不到返回空字符串
+func (c *DemoConfig) StrValueByKey(key string) string {
+	return c.GetString(key)
+}
+
+// SetByKey 覆盖配置
+func (c *DemoConfig) SetByKey(key string, v any) error {
+	c.Set(key, v)
+	return nil
+}
+
 func main() {
-	cfg, err := config.New()
-	if err != nil {
-		elog.Panic(err)
+	config.SetDefaultConfig(NewConfig())
+	logOpts := &slog.HandlerOptions{
+		Level: slog.LevelDebug,
 	}
-	elog.OverrideGlobalLogger(elog.NewLogger(cfg))
-	svr, err := server.NewServer("v0.0", nil)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, logOpts))
+	slog.SetDefault(logger)
+	svr, err := server.NewServer(server.NewServerOptions())
 	if err != nil {
-		elog.Error(err)
+		slog.Error("", slog.Any("error", err))
 	}
-	svr.AddMiddleware(middleware.Logger(), middleware.Recover())
+	svr.AddMiddleware(slogecho.New(logger), middleware.Recover())
 	svr.AddRouter(NewDemoRouter(svr.RootGroup()))
 	svr.Run()
 }
