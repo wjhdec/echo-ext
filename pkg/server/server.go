@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/wjhdec/echo-ext/pkg/config"
+	"github.com/wjhdec/echo-ext/pkg/logext"
 )
 
 type ServerConfig struct {
@@ -101,16 +102,15 @@ func (s *Server) Run() {
 		if cfgOpt.TLSKey == "" || cfgOpt.TLSPem == "" {
 			slog.Debug("not use tls")
 			if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-				slog.Error("Start service error", err)
+				logext.ErrorWithMsg("Start service error", err)
 			}
 		} else {
 			slog.Debug("use tls")
 			if err := srv.ListenAndServeTLS(cfgOpt.TLSPem, cfgOpt.TLSKey); err != http.ErrServerClosed {
-				slog.Error("Start service error", err)
+				logext.ErrorWithMsg("Start service error", err)
 			}
 		}
 	}()
-
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
@@ -119,6 +119,6 @@ func (s *Server) Run() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := s.e.Shutdown(ctx); err != nil {
-		slog.Error("server shutdown error", err)
+		logext.ErrorWithMsg("server shutdown error", err)
 	}
 }

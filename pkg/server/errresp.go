@@ -33,7 +33,7 @@ func NewErrResponse(err *echo.HTTPError, c echo.Context) *ErrResponse {
 func CustomHttpErrorHandler(err error, c echo.Context) {
 	if !c.Response().Committed {
 		if err := c.JSON(getErrorResponse(err, c)); err != nil {
-			logext.LogError(err)
+			logext.Error(err)
 		}
 	}
 }
@@ -44,11 +44,11 @@ func getErrorResponse(err error, c echo.Context) (int, any) {
 	switch e := err.(type) {
 	case *echo.HTTPError:
 		if !ignoreCode.Contains(e.Code) {
-			logext.LogError(err)
+			logext.Error(err)
 		}
 		return e.Code, NewErrResponse(e, c)
 	default:
-		logext.LogError(err)
+		logext.Error(err)
 		code := http.StatusInternalServerError
 		he := &echo.HTTPError{
 			Code: code, Message: err.Error(),
