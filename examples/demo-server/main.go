@@ -8,75 +8,39 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/pkg/errors"
 	slogecho "github.com/samber/slog-echo"
-	"github.com/spf13/viper"
 	"github.com/wjhdec/echo-ext/pkg/config"
 	"github.com/wjhdec/echo-ext/pkg/server"
 )
 
 type ResultInfo struct {
-	Value string
+	Value float64
 }
 
+// Req 参数，使用 echo.Bind 匹配
 type Req struct {
-	Name  string  `query:"name"`
-	Value float64 `query:"value"`
+	V1 float64 `query:"v1"`
+	V2 float64 `query:"v2"`
 }
 
-func NewTest1Handler() server.HandlerEnable {
-	return server.NewJsonHandler("", http.MethodGet, func(_ echo.Context, req Req) (*ResultInfo, error) {
-		return &ResultInfo{Value: req.Name + "_" + fmt.Sprintf("%f", req.Value)}, errors.Errorf("this is error")
+// NewSumFunctionHandler 加和接口
+func NewSumFunctionHandler() server.HandlerEnable {
+	return server.NewJsonHandler("/sum", http.MethodGet, func(_ echo.Context, req Req) (*ResultInfo, error) {
+		return &ResultInfo{Value: req.V1 + req.V2}, nil
 	})
 }
 
+// NewErrorDemoHandler 错误示例接口
+func NewErrorDemoHandler() server.HandlerEnable {
+	return server.NewJsonHandler("/demo-error", http.MethodGet, func(_ echo.Context, req Req) (*ResultInfo, error) {
+		// 如果想记录堆栈信息，可使用 github.com/pkg/errors
+		return &ResultInfo{}, fmt.Errorf("this is error")
+	})
+}
 func NewDemoRouter(group *echo.Group) server.Router {
 	router := server.NewRouter(group)
-	router.AddHandler(NewTest1Handler())
+	router.AddHandler(NewSumFunctionHandler(), NewErrorDemoHandler())
 	return router
-}
-
-type DemoConfig struct {
-	viper.Viper
-}
-
-func NewConfig() *DemoConfig {
-	v := viper.New()
-	v.AddConfigPath(".")
-	v.AddConfigPath("../../configs/")
-	if err := v.ReadInConfig(); err != nil {
-		panic(err)
-	}
-	return &DemoConfig{*v}
-}
-
-func (c *DemoConfig) Reload() error {
-	return c.ReadInConfig()
-}
-
-// UnmarshalByKey 根据key填充内容
-func (c *DemoConfig) UnmarshalByKey(key string, v any) error {
-	cfg := c.Sub(key)
-	if cfg != nil {
-		return cfg.Unmarshal(v)
-	}
-	return nil
-}
-
-// ValueByKey 根据key获取内容，返回 any，找不到则返回 nil
-func (c *DemoConfig) ValueByKey(key string) any {
-	return c.Get(key)
-}
-
-// StrValueByKey 根据key获取字符串内容，找不到返回空字符串
-func (c *DemoConfig) StrValueByKey(key string) string {
-	return c.GetString(key)
-}
-
-// SetByKey 覆盖配置
-func (c *DemoConfig) SetByKey(key string, v any) error {
-	c.Set(key, v)
-	return nil
 }
 
 func main() {
@@ -92,5 +56,7 @@ func main() {
 	}
 	svr.AddMiddleware(slogecho.New(logger), middleware.Recover())
 	svr.AddRouter(NewDemoRouter(svr.RootGroup()))
+	slog.Info("test url:", slog.String("url", "http://localhost:8888/my-test/sum?v1=1&v2=10"))
+	slog.Info("test error url:", slog.String("url", "http://localhost:8888/my-test/demo-error"))
 	svr.Run()
 }

@@ -5,7 +5,6 @@ go 1.21
 replace github.com/wjhdec/echo-ext => ../../
 
 require (
-	github.com/pkg/errors v0.9.1
 	github.com/labstack/echo/v4 v4.11.2
 	github.com/samber/slog-echo v1.3.0
 	github.com/spf13/viper v1.17.0
@@ -19,7 +18,7 @@ require (
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/sagikazarmark/locafero v0.3.0 // indirect
