@@ -4,11 +4,9 @@
 
 对echo进行了功能的整合扩展，方便简单服务的开发
 
-使用框架：
+依赖：
 
-* echo
-* zap
-* viper
+* github.com/labstack/echo/v4
 
 ## 使用示例
 
