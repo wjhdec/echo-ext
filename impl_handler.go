@@ -1,4 +1,4 @@
-package server
+package echoext
 
 import (
 	"io"
@@ -83,7 +83,7 @@ func NewNoContentHandler[T any](path, method string, f func(ctx echo.Context, re
 	}
 }
 
-// NewStreamHandler 无返回
+// NewStreamHandler 返回流，用于下载等
 func NewStreamHandler[T any](path, method string, f func(ctx echo.Context, req T) (header http.Header, reader io.ReadCloser, err error), middleware ...echo.MiddlewareFunc) HandlerEnable {
 	return &baseHandler{
 		method:     method,

@@ -9,8 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	slogecho "github.com/samber/slog-echo"
-	"github.com/wjhdec/echo-ext/pkg/config"
-	"github.com/wjhdec/echo-ext/pkg/server"
+	echoext "github.com/wjhdec/echo-ext/v2"
 )
 
 type ResultInfo struct {
@@ -24,39 +23,47 @@ type Req struct {
 }
 
 // NewSumFunctionHandler 加和接口
-func NewSumFunctionHandler() server.HandlerEnable {
-	return server.NewJsonHandler("/sum", http.MethodGet, func(_ echo.Context, req Req) (*ResultInfo, error) {
+func NewSumFunctionHandler() echoext.HandlerEnable {
+	return echoext.NewJsonHandler("/sum", http.MethodGet, func(_ echo.Context, req Req) (*ResultInfo, error) {
 		return &ResultInfo{Value: req.V1 + req.V2}, nil
 	})
 }
 
 // NewErrorDemoHandler 错误示例接口
-func NewErrorDemoHandler() server.HandlerEnable {
-	return server.NewJsonHandler("/demo-error", http.MethodGet, func(_ echo.Context, req Req) (*ResultInfo, error) {
+
+func NewErrorDemoHandler() echoext.HandlerEnable {
+	return echoext.NewJsonHandler("/demo-error", http.MethodGet, func(_ echo.Context, req Req) (*ResultInfo, error) {
 		// 如果想记录堆栈信息，可使用 github.com/pkg/errors
 		return &ResultInfo{}, fmt.Errorf("this is error")
 	})
 }
-func NewDemoRouter(group *echo.Group) server.Router {
-	router := server.NewRouter(group)
+func NewDemoRouter(group *echoext.ServerGroup) (echoext.Router, error) {
+	router := echoext.NewRouter(group.Group)
 	router.AddHandler(NewSumFunctionHandler(), NewErrorDemoHandler())
-	return router
+	return router, nil
 }
 
+// url: http://localhost:8181/my-test/sum?v1=1&v2=10
+// url: http://localhost:8888/my-test/demo-error
 func main() {
-	config.SetDefaultConfig(NewConfig())
+	opt := &echoext.Options{
+		Version:  "v1.0",
+		Port:     8181,
+		BasePath: "my-test",
+	}
 	logOpts := &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	}
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, logOpts))
 	slog.SetDefault(logger)
-	svr, err := server.NewServer(server.NewServerOptions())
+	opt.SetVersion("v1.1")
+	svr, err := echoext.NewServer(opt)
 	if err != nil {
-		slog.Error("", slog.Any("error", err))
+		slog.Error("server error", slog.Any("error", err))
 	}
 	svr.AddMiddleware(slogecho.New(logger), middleware.Recover())
-	svr.AddRouter(NewDemoRouter(svr.RootGroup()))
-	slog.Info("test url:", slog.String("url", "http://localhost:8888/my-test/sum?v1=1&v2=10"))
-	slog.Info("test error url:", slog.String("url", "http://localhost:8888/my-test/demo-error"))
+	if err := svr.AddRouterFnc(NewDemoRouter); err != nil {
+		slog.Error("server error", slog.Any("error", err))
+	}
 	svr.Run()
 }

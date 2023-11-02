@@ -1,8 +1,6 @@
-package server
+package echoext
 
-import (
-	"github.com/labstack/echo/v4"
-)
+import "github.com/labstack/echo/v4"
 
 type HandlerEnable interface {
 	HandlerFunc() echo.HandlerFunc

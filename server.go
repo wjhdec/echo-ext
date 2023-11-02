@@ -1,4 +1,4 @@
-package server
+package echoext
 
 import (
 	"context"
@@ -10,38 +10,25 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-
-	"github.com/wjhdec/echo-ext/pkg/config"
-	"github.com/wjhdec/echo-ext/pkg/logext"
 )
 
-type ServerConfig struct {
-	ConfigOptions *ConfigOptions
-	ServerOptions *ServerOptions
-}
-
 type Server struct {
-	Config ServerConfig
-
+	cfg       *Options
 	e         *echo.Echo
 	rootGroup *echo.Group
 	routers   []Router
 }
 
-func NewServer(opt *ServerOptions) (*Server, error) {
+func NewServer(opt *Options) (*Server, error) {
 	e := echo.New()
 	e.HideBanner = true
 	e.HTTPErrorHandler = CustomHttpErrorHandler
 
-	svrName := "server"
-	if opt.Name != "" {
-		svrName = "server." + opt.Name
-	}
-	cfgOpt := NewConfigOptions(svrName)
-	rootGroup := e.Group(cfgOpt.BasePath)
+	rootGroup := e.Group(opt.BasePath)
 	return &Server{
-		e: e, rootGroup: rootGroup,
-		Config: ServerConfig{cfgOpt, opt},
+		cfg:       opt,
+		e:         e,
+		rootGroup: rootGroup,
 	}, nil
 }
 
@@ -53,19 +40,33 @@ func (s *Server) Echo() *echo.Echo {
 	return s.e
 }
 
+func (s *Server) Options() *Options {
+	return s.cfg
+}
+
 func (s *Server) RootGroup() *echo.Group {
 	return s.rootGroup
 }
 
-func (s *Server) AddRouter(router ...Router) {
-	s.routers = append(s.routers, router...)
+type ServerGroup struct {
+	*echo.Group
+	Server *Server
 }
 
-type RouterFnc func(group *echo.Group, config ServerConfig) (Router, error)
+// SubGroup 创建子组
+func (s *ServerGroup) SubGroup(prefix string, funcs ...echo.MiddlewareFunc) *echo.Group {
+	return s.Group.Group(prefix, funcs...)
+}
+
+func (s *ServerGroup) Author(key string) Author {
+	return s.Server.Options().GetAuthor(key)
+}
+
+type RouterFnc func(group *ServerGroup) (Router, error)
 
 func (s *Server) AddRouterFnc(fncs ...RouterFnc) error {
 	for _, fnc := range fncs {
-		r, err := fnc(s.rootGroup, s.Config)
+		r, err := fnc(&ServerGroup{s.rootGroup, s})
 		if err != nil {
 			return err
 		}
@@ -84,30 +85,29 @@ func (s *Server) RegisterRouters() {
 
 func (s *Server) Run() {
 	s.RegisterRouters()
-	svrOpt := s.Config.ServerOptions
-	cfgOpt := s.Config.ConfigOptions
+	opt := s.cfg
 	s.rootGroup.GET("/info", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, echo.Map{
-			"version":      svrOpt.Version,
+			"version":      opt.Version,
 			"current_time": time.Now(),
 		})
 	})
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%d", cfgOpt.Port),
+		Addr:    fmt.Sprintf(":%d", opt.Port),
 		Handler: s.e,
 	}
 
 	go func() {
-		slog.Info("start server", "version", svrOpt.Version, "port", cfgOpt.Port, "config-file", config.ConfigFileUsed())
-		if cfgOpt.TLSKey == "" || cfgOpt.TLSPem == "" {
+		slog.Info("start server", "version", opt.Version, "port", opt.Port)
+		if opt.TLSKey == "" || opt.TLSPem == "" {
 			slog.Debug("not use tls")
 			if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-				logext.ErrorWithMsg("Start service error", err)
+				logFatalWithMsg("start service error", err)
 			}
 		} else {
 			slog.Debug("use tls")
-			if err := srv.ListenAndServeTLS(cfgOpt.TLSPem, cfgOpt.TLSKey); err != http.ErrServerClosed {
-				logext.ErrorWithMsg("Start service error", err)
+			if err := srv.ListenAndServeTLS(opt.TLSPem, opt.TLSKey); err != http.ErrServerClosed {
+				logFatalWithMsg("start service error", err)
 			}
 		}
 	}()
@@ -119,6 +119,6 @@ func (s *Server) Run() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := s.e.Shutdown(ctx); err != nil {
-		logext.ErrorWithMsg("server shutdown error", err)
+		logErrorWithMsg("server shutdown error", err)
 	}
 }

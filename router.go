@@ -1,8 +1,6 @@
-package server
+package echoext
 
-import (
-	"github.com/labstack/echo/v4"
-)
+import "github.com/labstack/echo/v4"
 
 func NewRouter(group *echo.Group) Router {
 	return &router{
