@@ -2,11 +2,13 @@
 
 ## 说明
 
-对echo进行了功能的整合扩展，方便简单服务的开发
+对echo(v4)进行了功能的整合扩展，主要特点：
 
-依赖：
 
-* github.com/labstack/echo/v4
+* 使用泛型封装了请求及返回，可以更方便的写 swag 注释，示例见 [main.go](./examples/main.go)
+* 添加 form-data 类型的 binder，支持文件上传的绑定，示例见 [file_binder_test.go](./file_binder_test.go)
+* 仿照 springboot 的默认错误结构重写 ErrorHandler
+
 
 ## 安装
 
@@ -24,4 +26,4 @@ go get -u github.com/wjhdec/echo-ext/v2
 
 测试错误：
 
-`http://localhost:8888/my-test/demo-error`
+`http://localhost:8181/my-test/demo-error`

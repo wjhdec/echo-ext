@@ -22,6 +22,7 @@ type Server struct {
 func NewServer(opt *Options) (*Server, error) {
 	e := echo.New()
 	e.HideBanner = true
+	e.Binder = NewFileBinder(e.Binder)
 	e.HTTPErrorHandler = CustomHttpErrorHandler
 
 	rootGroup := e.Group(opt.BasePath)

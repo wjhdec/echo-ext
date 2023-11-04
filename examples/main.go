@@ -12,6 +12,8 @@ import (
 	echoext "github.com/wjhdec/echo-ext/v2"
 )
 
+//go:generate swag i --parseDependency -ot json
+
 type ResultInfo struct {
 	Value float64
 }
@@ -23,6 +25,14 @@ type Req struct {
 }
 
 // NewSumFunctionHandler 加和接口
+//
+//	@summary		加和
+//	@description	加和
+//	@tags			tag
+//	@success		200		{object}	ResultInfo
+//	@failure		400,500	{object}	echoext.ErrResponse
+//	@router			/sum [get]
+//	@param			request	query	Req	true	"getDataRequest"
 func NewSumFunctionHandler() echoext.HandlerEnable {
 	return echoext.NewJsonHandler("/sum", http.MethodGet, func(_ echo.Context, req Req) (*ResultInfo, error) {
 		return &ResultInfo{Value: req.V1 + req.V2}, nil

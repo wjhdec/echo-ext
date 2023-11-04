@@ -7,8 +7,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-//#region 基础实现
-
 type baseHandler struct {
 	// method 执行方法 e.g. http.MethodGet http.MethodPut
 	method      string
@@ -32,8 +30,6 @@ func (h *baseHandler) Middlewares() []echo.MiddlewareFunc {
 func (h *baseHandler) HandlerFunc() echo.HandlerFunc {
 	return h.handlerFunc
 }
-
-//#endregion 基础实现
 
 // NewJsonHandler 返回json
 func NewJsonHandler[T, R any](path, method string, f func(ctx echo.Context, req T) (resp R, err error), middleware ...echo.MiddlewareFunc) HandlerEnable {
