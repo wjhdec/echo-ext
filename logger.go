@@ -18,7 +18,3 @@ func logFatalWithMsg(msg string, err error) {
 	logErrorWithMsg(msg, err)
 	os.Exit(1)
 }
-
-func logFatal(err error) {
-	logFatalWithMsg(err.Error(), err)
-}

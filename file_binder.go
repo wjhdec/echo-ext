@@ -19,11 +19,11 @@ func (b *fileBinder) Bind(i any, c echo.Context) error {
 	}
 	cType := c.Request().Header.Get(echo.HeaderContentType)
 	if strings.HasPrefix(cType, echo.MIMEApplicationForm) || strings.HasPrefix(cType, echo.MIMEMultipartForm) {
-		if form, err := c.MultipartForm(); err != nil {
+		form, err := c.MultipartForm()
+		if err != nil {
 			return err
-		} else {
-			return b.bindFile(i, form.File)
 		}
+		return b.bindFile(i, form.File)
 	}
 	return nil
 }

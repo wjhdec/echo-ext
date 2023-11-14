@@ -22,7 +22,7 @@ func TestFileBinder(t *testing.T) {
 		File *multipart.FileHeader `form:"file"`
 	}
 
-	dir, err := os.MkdirTemp(".", "out-")
+	dir, _ := os.MkdirTemp(".", "out-")
 	defer os.RemoveAll(dir)
 	e := echo.New()
 	e.Use(middleware.Logger(), middleware.Recover())
@@ -39,7 +39,7 @@ func TestFileBinder(t *testing.T) {
 		defer f.Close()
 		outputFile := path.Join(dir, freq.File.Filename)
 
-		of, err := os.OpenFile(outputFile, os.O_CREATE|os.O_WRONLY, 0644)
+		of, err := os.OpenFile(outputFile, os.O_CREATE|os.O_WRONLY, 0o644)
 		if err != nil {
 			return err
 		}

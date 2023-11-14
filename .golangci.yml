@@ -4,15 +4,14 @@ linters:
     - revive
     - rowserrcheck
     - sqlclosecheck
-    - deadcode
+    - unused
     - gosimple
-    - goimports
+    - gofumpt
 
 linters-settings:
   gocyclo:
     min-complexity: 10
   revive:
-    ignore-generated-headers: true
     rules:
       - name: var-naming
         arguments: [[ID, API, SQL, JSON, HTTP], []]
