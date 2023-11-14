@@ -3,10 +3,10 @@ package echoext
 type Options struct {
 	Name     string `json:"name,omitempty"`
 	Version  string `json:"version,omitempty"`
-	BasePath string `json:"base_path,omitempty"`
+	BasePath string `json:"base_path,omitempty" yaml:"base-path,omitempty"`
 	Port     int    `json:"port,omitempty"`
-	TLSKey   string `json:"tls_key,omitempty"`
-	TLSPem   string `json:"tls_pem,omitempty"`
+	TLSKey   string `json:"tls_key,omitempty" yaml:"tls-key,omitempty"`
+	TLSPem   string `json:"tls_pem,omitempty" yaml:"tls-pem,omitempty"`
 
 	authorMap map[string]Author
 }
